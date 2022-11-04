@@ -7,6 +7,7 @@ import { JsonRpc } from 'eosjs'
 import * as React from 'react'
 import { OreIdAuthenticator, AuthProvider } from 'ual-oreid'
 import { WebPopup } from 'oreid-webpopup'
+import './App.css'
 
 interface ExampleEnv {
   CHAIN_ID: string
@@ -130,7 +131,10 @@ class TransactionApp extends React.Component<
     demoTransaction.actions[0].data.from = accountName
     try {
       await activeUser.signTransaction(demoTransaction, { broadcast: true })
-      await this.updateAccountBalance()
+
+      setTimeout(() => {
+        this.updateAccountBalance()
+      }, 1000)
     } catch (error) {
       console.warn(error)
     }
@@ -154,7 +158,7 @@ class TransactionApp extends React.Component<
     return (
       <p className='ual-btn-wrapper'>
         <span className='ual-generic-button blue' onClick={this.transfer}>
-          {'Transfer 1 eos to example'}
+          {'Transfer 1 EOS'}
         </span>
       </p>
     )
