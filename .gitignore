@@ -25,3 +25,4 @@ dist-ssr
 
 # OS
 .DS_Store
+authenticator/node_modules
