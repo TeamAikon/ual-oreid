@@ -9,49 +9,32 @@ import { OreIdAuthenticator, AuthProvider } from 'ual-oreid'
 import { WebPopup } from 'oreid-webpopup'
 import './App.css'
 
-interface ExampleEnv {
+interface Network {
   CHAIN_ID: string
   RPC_PROTOCOL: string
   RPC_HOST: string
   RPC_PORT: string
 }
 
-interface TransactionProps {
-  ual: any
-}
-
-interface TransactionState {
-  activeUser: any
-  accountName: string
-  accountBalance: any
-  rpc: JsonRpc
-}
-
-const defaultState = {
-  activeUser: null,
-  accountName: '',
-  accountBalance: null
-}
-
-const EXAMPLE_ENV: ExampleEnv = {
-  CHAIN_ID: '5fff1dae8dc8e2fc4d5b23b2c7665c97f9e9d8edf2b6485a86ba311c25639191',
+const TELOS_TEST: Network = {
+  CHAIN_ID: '1eaa0824707c8c16bd25145493bf062aecddfeb56c736f6ba6397f3195f33c9f',
   RPC_PROTOCOL: 'https',
-  RPC_HOST: 'api-kylin.eosasia.one',
+  RPC_HOST: 'testnet.telos.caleos.io',
   RPC_PORT: '443'
 }
 
-const exampleNet = {
-  chainId: EXAMPLE_ENV.CHAIN_ID,
+const telosTestNet = {
+  chainId: TELOS_TEST.CHAIN_ID,
   rpcEndpoints: [
     {
-      protocol: EXAMPLE_ENV.RPC_PROTOCOL,
-      host: EXAMPLE_ENV.RPC_HOST,
-      port: Number(EXAMPLE_ENV.RPC_PORT)
+      protocol: TELOS_TEST.RPC_PROTOCOL,
+      host: TELOS_TEST.RPC_HOST,
+      port: Number(TELOS_TEST.RPC_PORT)
     }
   ]
 }
 
-const demoTransaction = {
+const tlosTransferTransaction = {
   actions: [
     {
       account: 'eosio.token',
@@ -64,88 +47,80 @@ const demoTransaction = {
       ],
       data: {
         from: '', // use account that was logged in
-        to: 'ore1tiqqs1kq',
-        quantity: '1.0000 EOS',
+        to: 'ore1trgeahoo',
+        quantity: '0.0005 TLOS',
         memo: 'UAL rocks!'
       }
     }
   ]
 }
 
-class TransactionApp extends React.Component<
-  TransactionProps,
-  TransactionState
-> {
-  static displayName = 'TransactionApp'
+const TransactionApp = ({ ual }: any) => {
+  const { activeUser } = ual;
+  const [activeUserState, setActiveUserState] = React.useState(null);
+  const [accountName, setAccountName] = React.useState('');
+  const [accountBalance, setAccountBalance] = React.useState(null);
+  const rpc: JsonRpc = new JsonRpc(
+    `${TELOS_TEST.RPC_PROTOCOL}://${TELOS_TEST.RPC_HOST}:${TELOS_TEST.RPC_PORT}`,
+    { fetch }
+  );
 
-  constructor (props: TransactionProps) {
-    super(props)
-    this.state = {
-      ...defaultState,
-      rpc: new JsonRpc(
-        `${EXAMPLE_ENV.RPC_PROTOCOL}://${EXAMPLE_ENV.RPC_HOST}:${EXAMPLE_ENV.RPC_PORT}`,
-        { fetch }
-      )
+  React.useEffect(() => {
+    // If we have an active user, and we didn't before, update state
+    if (activeUser && !activeUserState) {
+      setActiveUserState(activeUser);
+      updateAccountName();
     }
-    this.updateAccountBalance = this.updateAccountBalance.bind(this)
-    this.updateAccountName = this.updateAccountName.bind(this)
-    this.renderTransferButton = this.renderTransferButton.bind(this)
-    this.transfer = this.transfer.bind(this)
-    this.renderModalButton = this.renderModalButton.bind(this)
-  }
 
-  public componentDidUpdate () {
-    const {
-      ual: { activeUser }
-    } = this.props
-    if (activeUser && !this.state.activeUser) {
-      this.setState({ activeUser }, this.updateAccountName)
-    } else if (!activeUser && this.state.activeUser) {
-      this.setState(defaultState)
+    // If we don't have an active user, but we did before, clear state
+    if (!activeUser && activeUserState) {    
+      setActiveUserState(null);
+      setAccountName('');
+      setAccountBalance(null);
     }
-  }
+  }, [activeUser, activeUserState]);
 
-  public async updateAccountName (): Promise<void> {
+  const updateAccountName = async () => {
     try {
-      const accountName = await this.state.activeUser.getAccountName()
-      this.setState({ accountName }, this.updateAccountBalance)
+      const accountName = await activeUser.getAccountName();
+      setAccountName(accountName);
+      updateAccountBalance();
+      
     } catch (e) {
       console.warn(e)
     }
   }
 
-  public async updateAccountBalance (): Promise<void> {
-    console.log({ state: this.state })
+  const updateAccountBalance = async () => {
     try {
-      const account = await this.state.rpc.get_account(this.state.accountName)
-      const accountBalance = account.core_liquid_balance
-      this.setState({ accountBalance })
+      const account = await rpc.get_account(activeUser.accountName);
+      const accountBalance: any = account.core_liquid_balance;
+      setAccountBalance(accountBalance);
     } catch (e) {
       console.warn(e)
     }
   }
 
-  public async transfer () {
-    const { accountName, activeUser } = this.state
-    demoTransaction.actions[0].authorization[0].actor = accountName
-    demoTransaction.actions[0].data.from = accountName
+  const transfer = async () => {
+    tlosTransferTransaction.actions[0].authorization[0].actor = accountName;
+    tlosTransferTransaction.actions[0].data.from = accountName;
     try {
-      await activeUser.signTransaction(demoTransaction, { broadcast: true })
+      await activeUser.signTransaction(tlosTransferTransaction, { broadcast: true });
 
       setTimeout(() => {
-        this.updateAccountBalance()
+        updateAccountBalance()
       }, 1000)
     } catch (error) {
       console.warn(error)
     }
   }
 
-  public renderModalButton () {
+  const renderModalButton = () => {
     return (
       <p className='ual-btn-wrapper'>
         <span
           role='button'
-          onClick={this.props.ual.showModal}
+          onClick={ual.showModal}
           className='ual-generic-button'
         >
           Show UAL Modal
@@ -154,20 +129,18 @@ class TransactionApp extends React.Component<
     )
   }
 
-  public renderTransferButton () {
+  const renderTransferButton = () => {
     return (
       <p className='ual-btn-wrapper'>
-        <span className='ual-generic-button blue' onClick={this.transfer}>
-          {'Transfer 1 EOS'}
+        <span className='ual-generic-button blue' onClick={transfer}>
+          {'0.0005 EOS'}
         </span>
       </p>
     )
-  }
+  };
 
-  public renderLogoutBtn = () => {
-    const {
-      ual: { activeUser, activeAuthenticator, logout }
-    } = this.props
+  const renderLogoutBtn = () => {
+    const { activeAuthenticator, logout } = ual;
     if (!!activeUser && !!activeAuthenticator) {
       return (
         <p className='ual-btn-wrapper'>
@@ -179,25 +152,20 @@ class TransactionApp extends React.Component<
     }
   }
 
-  public render () {
-    const {
-      ual: { activeUser }
-    } = this.props
-    const { accountBalance, accountName } = this.state
-    const modalButton = !activeUser && this.renderModalButton()
-    const loggedIn = accountName ? `Logged in as ${accountName}` : ''
-    const myBalance = accountBalance ? `Balance: ${accountBalance}` : ''
-    const transferBtn = accountBalance && this.renderTransferButton()
-    return (
-      <div style={{ textAlign: 'center' }}>
-        {modalButton}
-        <h3 className='ual-subtitle'>{loggedIn}</h3>
-        <h4 className='ual-subtitle'>{myBalance}</h4>
-        {transferBtn}
-        {this.renderLogoutBtn()}
-      </div>
-    )
-  }
+  const modalButton = !activeUser && renderModalButton();
+  const loggedIn = accountName ? `Logged in as ${accountName}` : '';
+  const myBalance = accountBalance ? `Balance: ${accountBalance}` : '';
+  const transferBtn = accountBalance && renderTransferButton();
+
+  return (
+    <div style={{ textAlign: 'center' }}>
+      {modalButton}
+      <h3 className='ual-subtitle'>{loggedIn}</h3>
+      <h4 className='ual-subtitle'>{myBalance}</h4>
+      {transferBtn}
+      {renderLogoutBtn()}
+    </div>
+  )
 }
 
 const TestAppConsumer = withUAL(TransactionApp)
@@ -205,9 +173,9 @@ const TestAppConsumer = withUAL(TransactionApp)
 TestAppConsumer.displayName = 'TestAppConsumer'
 
 const oreid = new OreIdAuthenticator(
-  [exampleNet],
+  [telosTestNet],
   {
-    appId: 't_58783cf256134be29e4997550b6e69d6',
+    appId: 't_372177f5e8194e23afe7f145191c8ee7',
     plugins: { popup: WebPopup() }
   },
   AuthProvider.Google
@@ -216,7 +184,7 @@ const oreid = new OreIdAuthenticator(
 export default () => {
   return (
     <UALProvider
-      chains={[exampleNet]}
+      chains={[telosTestNet]}
       authenticators={[oreid]}
       appName={'My App'}
     >

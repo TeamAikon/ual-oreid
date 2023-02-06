@@ -3,7 +3,7 @@
 ## Using the Authenticator Plugin
 
 Our example app demonstrates login and transaction signing using OREID.
-See `example/src/App.tsx`
+See `example/src/App.tsx` for a step by step walkthough see [this](./oreidUAL.md) documentation
 
 ## Build and Run
 
@@ -26,6 +26,7 @@ yarn run dev
 
 ### Using ual-oreid as an NPM Package
 In practice, the NPM packaged version number will be used instead of the ```link=...``` value.  To use the published NPM package, in the file ```example/package.json``` change the ```ual-oreid``` package from ```link=...``` to the version number you want to use.
+
 
 
 ## Example App Functionality
