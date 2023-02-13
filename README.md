@@ -3,7 +3,7 @@
 ## Using the Authenticator Plugin
 
 Our example app demonstrates login and transaction signing using OREID.
-See `example/src/App.tsx` for a step by step walkthough see [this](./oreidUAL.md) documentation
+See `example/src/App.tsx` for a step by step walkthough see [this](./oreidUAL.md) documentation.
 
 ## Build and Run
 

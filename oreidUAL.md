@@ -1,4 +1,5 @@
 
+
 # Universal Authenticator Library (UAL) for EOS Developers
 
 ## Introduction
@@ -45,7 +46,7 @@ import  {  WebPopup  }  from  'oreid-webpopup'
 import  {  UALProvider,  withUAL  }  from  'ual-reactjs-renderer'
 ```
 
-3. **The Transaction app setting up the UAL provider**
+2. **The Transaction app setting up the UAL provider**
 
 Let's start with the overall structure of the app to see how UAL is used:
 ```
@@ -157,7 +158,7 @@ const TransactionApp = ({ ual }: any) => {
   );
 ```
 
-#### Displaying the UAL modal, transferring tokens and displaying information
+#### Triggering generic, on-chain interactions and viewing on-chain data
 The rest is standard React. Here's the rest of the `TransactionApp` component for reference:
 ```
 const TransactionApp = ({ ual }: any) => {
@@ -265,4 +266,31 @@ const TransactionApp = ({ ual }: any) => {
   )
 }
 ```
+## 5. Integrating an alternative provider (Anchor Wallet)
+#### 1. Installing deps
+Install Anchor's UAL plugin to your project ---> `npm install ual-anchor`
 
+#### 2. Add the new import
+`import  {  Anchor  }  from  'ual-anchor'`
+
+#### 3. Create the Anchor authenticator and add it to your UAL Provider component
+```
+const anchor = new Anchor([exampleNet], {
+  appName: 'UAL Anchor Example',
+})
+
+...
+
+export default () => {
+  return (
+    <UALProvider
+      chains={[exampleNet]}
+      authenticators={[oreid]}
+      authenticators={[oreid, anchor]}
+      appName={'My App'}
+    >
+      <TestAppConsumer />
+    </UALProvider>
+  )
+}
+```
